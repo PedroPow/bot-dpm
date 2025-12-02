@@ -1,0 +1,54 @@
+{
+  "convocacoes": [
+    {
+      "id": "conv-1763875420",
+      "type": "convocacao",
+      "target_id": 1235243087937409077,
+      "author_id": 540588786384502784,
+      "data": "asdasd",
+      "hora": "sadasd",
+      "timestamp": "2025-11-23T05:23:40.923428+00:00",
+      "status": "open",
+      "summary": "Convocação para asdasd às sadasd"
+    },
+    {
+      "id": "conv-1764028855",
+      "type": "convocacao",
+      "target_id": 1235243087937409077,
+      "author_id": 540588786384502784,
+      "data": "24/11",
+      "hora": "21:00",
+      "timestamp": "2025-11-25T00:00:55.965598+00:00",
+      "status": "open",
+      "summary": "Convocação para 24/11 às 21:00"
+    }
+  ],
+  "pads": [
+    {
+      "id": "pad-1764030878",
+      "type": "pad",
+      "target_id": 1235243087937409077,
+      "author_id": 540588786384502784,
+      "decision": "EXONERAÇÃO",
+      "timestamp": "2025-11-25T00:34:38.540382+00:00",
+      "status": "open",
+      "summary": "PAD decisão: EXONERAÇÃO"
+    }
+  ],
+  "ipms": [
+    {
+      "id": "ipm-1763945402",
+      "type": "ipm",
+      "target_name": "<@540588786384502784>",
+      "author_id": 540588786384502784,
+      "motivo": "Agreção",
+      "data": "15/12",
+      "hora": "23:00",
+      "local": "Av Paulista",
+      "responsavel": "<@1391493791097163979>",
+      "timestamp": "2025-11-24T00:50:02.856483+00:00",
+      "status": "open",
+      "summary": "IPM: Agreção"
+    }
+  ]
+}
