@@ -571,5 +571,3 @@ async def on_ready():
 # Em seguida execute: python bot_corregedoria_system.py
 
 TOKEN = os.getenv("TOKEN")
-
-bot.run(TOKEN)
