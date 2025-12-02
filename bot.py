@@ -570,6 +570,6 @@ async def on_ready():
 # Powershell (Windows): $env:DISCORD_TOKEN="seu_token_aqui"
 # Em seguida execute: python bot_corregedoria_system.py
 
-TOKEN = "MTM5MTQ5Mzc5MTA5NzE2Mzk3OQ.Gjyzgl.GRNP626i8PncXXOKm2yUY0PnahW5SQzxfTPgNg"
+TOKEN = os.getenv("TOKEN")
 
 bot.run(TOKEN)
