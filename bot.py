@@ -41,7 +41,7 @@ intents.guilds = True
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = MyBot(command_prefix="!", intents=intents)
 
 # IDs - ajuste conforme seu servidor
 ID_DO_SERVIDOR = 1343398652336537654  # Troque pelo ID real do seu servidor
@@ -519,11 +519,16 @@ async def status_militar(interaction: discord.Interaction, membro: discord.Membe
     
 
 
+class MyBot(commands.Bot):
+    async def setup_hook(self):
+        guild = discord.Object(id=ID_DO_SERVIDOR)
+        await self.tree.sync(guild=guild)
+        print("✅ Slash commands sincronizados")
 
 # ---------- EVENTOS ----------
 @bot.event
 async def on_ready():
-    print(f'Bot conectado como {bot.user}')
+    print(f"🤖 Bot conectado como {bot.user}")  
 
     # Envia painel inicial (apenas uma vez)
     canal = bot.get_channel(CANAL_ID)
@@ -555,7 +560,6 @@ async def on_ready():
 
     # sincroniza comandos de aplicação para o guild (apenas nesse servidor para testes)
     try:
-        synced = await bot.tree.sync(guild=discord.Object(id=ID_DO_SERVIDOR))
         print(f"Comandos sincronizados: {[cmd.name for cmd in synced]}")
     except Exception as e:
         print(f"Erro ao sincronizar comandos: {e}")
