@@ -564,10 +564,6 @@ async def on_ready():
     except Exception as e:
         print(f"Erro ao sincronizar comandos: {e}")
 
-# ---------- INSTRUÇÕES DE EXECUÇÃO ----------
-# Ao rodar em produção, exporte a variável DISCORD_TOKEN com o token do bot.
-# Exemplo (Linux/macOS): export DISCORD_TOKEN="seu_token_aqui"
-# Powershell (Windows): $env:DISCORD_TOKEN="seu_token_aqui"
-# Em seguida execute: python bot_corregedoria_system.py
-
 TOKEN = os.getenv("TOKEN")
+
+bot.run(TOKEN)
