@@ -412,10 +412,7 @@ class TicketButtons(discord.ui.View):
 async def mensagem(interaction: discord.Interaction):
     # Permissões: mantenha seus role ids conforme necessário
     allowed_role_ids = [
-        1364016462154563614,  # PRESIDENTE
-        1364016541330575451,  # VICE PRESIDENTE
-        1389710649390534717,  # GOVERNADOR
-        1376730670910537788   # DEV
+        1449985109116715008,  # ADMINISTRADOR
     ]
     if not any(discord.utils.get(interaction.user.roles, id=role_id) for role_id in allowed_role_ids):
         await interaction.response.send_message("❌ Você não tem permissão para usar este comando.", ephemeral=True)
