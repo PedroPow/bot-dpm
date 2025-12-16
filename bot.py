@@ -20,19 +20,18 @@ import requests
 
 import requests
 
-import requests
-
-API_URL = "https://corregedoria-api2.onrender.com"
-
-def enviar_api(tipo, dados):
+async def enviar_api(tipo, dados):
     body = dados.copy()
     body["tipo"] = tipo
 
     try:
-        r = requests.post(API_URL, json=body)
-        print("API STATUS:", r.status_code, r.text)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(API_URL, json=body, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                text = await resp.text()
+                print("API STATUS:", resp.status, text)
     except Exception as e:
         print("Erro ao enviar dados para API:", e)
+
 
 
 # ---------- CONFIGURAÇÃO ----------
@@ -47,7 +46,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # IDs - ajuste conforme seu servidor
 ID_DO_SERVIDOR = 1343398652336537654  # Troque pelo ID real do seu servidor
 CANAL_ID = 1450353353845510175
-CARGO_AUTORIZADO_ID = 1449998328334123208
+CARGO_AUTORIZADO_ID = 1449985109116715008
 CATEGORIA_CONVOCACAO = 1450353156662890516
 CATEGORIA_PAD = 1450353156662890516
 CATEGORIA_IPM = 1450353156662890516
