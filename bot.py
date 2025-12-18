@@ -20,18 +20,6 @@ import requests
 
 import requests
 
-async def enviar_api(tipo, dados):
-    body = dados.copy()
-    body["tipo"] = tipo
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(API_URL, json=body, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                text = await resp.text()
-                print("API STATUS:", resp.status, text)
-    except Exception as e:
-        print("Erro ao enviar dados para API:", e)
-
 
 
 # ---------- CONFIGURAÇÃO ----------
@@ -40,6 +28,17 @@ intents.messages = True
 intents.guilds = True
 intents.message_content = True
 intents.members = True
+
+ID_DO_SERVIDOR = 1343398652336537654
+
+intents = discord.Intents.default()
+intents.members = True
+
+class MyBot(commands.Bot):
+    async def setup_hook(self):
+        guild = discord.Object(id=ID_DO_SERVIDOR)
+        await self.tree.sync(guild=guild)
+        print("✅ Slash commands sincronizados com sucesso")
 
 bot = MyBot(command_prefix="!", intents=intents)
 
@@ -199,26 +198,6 @@ class TicketButtons(discord.ui.View):
             hora = await bot.wait_for("message", check=check)
             await hora.delete()
 
-            # Registro no JSON
-            record = {
-                "id": f"conv-{int(datetime.now(timezone.utc).timestamp())}",
-                "type": "convocacao",
-                "target_id": convocado.id,
-                "author_id": interaction.user.id,
-                "data": data.content,
-                "hora": hora.content,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "open",
-                "summary": f"Convocação para {data.content} às {hora.content}"
-            }
-            add_record("convocacao", record)
-
-            enviar_api("convocacoes", {
-    "nome": convocado.display_name,
-    "data": data.content,
-    "hora": hora.content,
-    "responsavel": interaction.user.display_name
-})
 
 
             embed = discord.Embed(
@@ -270,24 +249,6 @@ class TicketButtons(discord.ui.View):
             decisao = await bot.wait_for("message", check=check)
             await decisao.delete()
 
-            # Registro no JSON
-            record = {
-                "id": f"pad-{int(datetime.now(timezone.utc).timestamp())}",
-                "type": "pad",
-                "target_id": investigado.id,
-                "author_id": interaction.user.id,
-                "decision": decisao.content,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "open",
-                "summary": f"PAD decisão: {decisao.content[:120]}"
-            }
-            add_record("pad", record)
-
-            enviar_api("pads", {
-    "militar": investigado.display_name,
-    "decisao": decisao.content,
-    "responsavel": interaction.user.display_name
-})
 
 
             embed = discord.Embed(
@@ -364,32 +325,6 @@ class TicketButtons(discord.ui.View):
         await canal.send("Informe o responsável pelo IPM:")
         responsavel_ipm = await bot.wait_for("message", check=check)
 
-        # Registro no JSON
-        record = {
-            "id": f"ipm-{int(datetime.now(timezone.utc).timestamp())}",
-            "type": "ipm",
-            "target_name": nome.content,
-            "author_id": interaction.user.id,
-            "motivo": motivo.content,
-            "data": data.content,
-            "hora": hora.content,
-            "local": local.content,
-            "responsavel": responsavel_ipm.content,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "open",
-            "summary": f"IPM: {motivo.content[:120]}"
-        }
-        add_record("ipm", record)
-
-        enviar_api("ipms", {
-    "nome": nome.content,
-    "motivo": motivo.content,
-    "data": data.content,
-    "hora": hora.content,
-    "local": local.content,
-    "responsavel": responsavel_ipm.content
-})
-
 
         embed = discord.Embed(
             title="Segurança Pública | Instauração de IPM",
@@ -407,128 +342,10 @@ class TicketButtons(discord.ui.View):
             await log_channel.send(embed=embed)
         await canal.delete()
 
-# ---------- COMANDO PARA ENVIAR MENSAGENS RICOS (mantive) ----------
-@bot.tree.command(name="mensagem", description="Envie uma mensagem pelo bot", guild=discord.Object(id=ID_DO_SERVIDOR))
-async def mensagem(interaction: discord.Interaction):
-    # Permissões: mantenha seus role ids conforme necessário
-    allowed_role_ids = [
-        1449985109116715008,  # ADMINISTRADOR
-    ]
-    if not any(discord.utils.get(interaction.user.roles, id=role_id) for role_id in allowed_role_ids):
-        await interaction.response.send_message("❌ Você não tem permissão para usar este comando.", ephemeral=True)
-        return
-
-    class MensagemModal(discord.ui.Modal, title="📨 Enviar Mensagem"):
-        conteudo = discord.ui.TextInput(
-            label="Conteúdo da Mensagem",
-            style=discord.TextStyle.paragraph,
-            placeholder="Escreva a mensagem com quebras de linha, emojis etc.",
-            max_length=2000
-        )
-
-        async def on_submit(self, interaction_modal: discord.Interaction):
-            await interaction_modal.response.send_message("⏳ Enviando mensagem...", ephemeral=True)
-            sent_msg = await interaction.channel.send(self.conteudo.value)
-
-            await interaction_modal.followup.send(
-                "📎 Se desejar, **responda à mensagem enviada** com anexos (imagens/vídeos) **em até 5 minutos**.",
-                ephemeral=True
-            )
-
-            def check(m):
-                return (
-                    m.reference and
-                    m.reference.message_id == sent_msg.id and
-                    m.author == interaction_modal.user and
-                    m.channel == interaction_modal.channel
-                )
-
-            try:
-                reply_msg = await bot.wait_for("message", timeout=300.0, check=check)
-
-                arquivos = []
-                async with aiohttp.ClientSession() as session:
-                    for attachment in reply_msg.attachments:
-                        async with session.get(attachment.url) as resp:
-                            if resp.status == 200:
-                                data = await resp.read()
-                                arquivos.append(discord.File(fp=io.BytesIO(data), filename=attachment.filename))
-
-                try:
-                    await sent_msg.delete()
-                except discord.Forbidden:
-                    pass
-                try:
-                    await reply_msg.delete()
-                except discord.Forbidden:
-                    pass
-
-                await interaction.channel.send(content=self.conteudo.value, files=arquivos)
-
-            except asyncio.TimeoutError:
-                pass
-
-    await interaction.response.send_modal(MensagemModal())
-
-# ---------- NOVOS COMANDOS / DASHBOARD / STATUS ----------
-# Comando de dashboard - mostra contagens rápidas
-@bot.tree.command(name="dashboard", description="Mostrar painel rápido de convocações, PADs e IPMs", guild=discord.Object(id=ID_DO_SERVIDOR))
-async def dashboard(interaction: discord.Interaction):
-    # Apenas roles autorizados podem ver
-    if not any(role.id == CARGO_AUTORIZADO_ID for role in interaction.user.roles):
-        await interaction.response.send_message("❌ Você não tem permissão para ver o dashboard.", ephemeral=True)
-        return
-
-    counts = get_counts()
-    embed = discord.Embed(title="📊 Painel DPM - Resumo", color=discord.Color.blue())
-    embed.add_field(name="Convocações abertas", value=str(counts["convocacoes_abertas"]), inline=True)
-    embed.add_field(name="PADs em andamento", value=str(counts["pads_abertos"]), inline=True)
-    embed.add_field(name="IPMs em andamento", value=str(counts["ipms_abertos"]), inline=True)
-    embed.set_footer(text=f"Última atualização: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    await interaction.response.send_message(embed=embed, ephemeral=True)
-
-# Comando de status individual
-@bot.tree.command(name="status_militar", description="Ver status e histórico de um militar", guild=discord.Object(id=ID_DO_SERVIDOR))
-@app_commands.describe(membro="Membro a ser consultado")
-async def status_militar(interaction: discord.Interaction, membro: discord.Member):
-    if not any(role.id == CARGO_AUTORIZADO_ID for role in interaction.user.roles):
-        await interaction.response.send_message("❌ Você não tem permissão para usar este comando.", ephemeral=True)
-        return
-
-    history = get_member_history(membro.id, limit=10)
-    embed = discord.Embed(title=f"🔎 Status de {membro.display_name}", color=discord.Color.blurple())
-    embed.add_field(name="Usuário", value=f"{membro.mention} (`{membro.id}`)", inline=False)
-    embed.add_field(name="Total de registros", value=str(len(history)), inline=False)
-
-    if history:
-        desc = ""
-        for item in history[:6]:
-            ts = item.get("timestamp")
-            # format friendly
-            try:
-                dt = datetime.fromisoformat(ts)
-                ts_str = dt.strftime("%Y-%m-%d %H:%M")
-            except Exception:
-                ts_str = ts
-            desc += f"- **{item['type']}** | {ts_str} | {item['status']} | {item['summary']}\n"
-        embed.add_field(name="Últimos registros", value=desc, inline=False)
-    else:
-        embed.add_field(name="Últimos registros", value="Nenhum registro encontrado.", inline=False)
-
-    await interaction.response.send_message(embed=embed, ephemeral=True)
-    
-
-
-class MyBot(commands.Bot):
-    async def setup_hook(self):
-        guild = discord.Object(id=ID_DO_SERVIDOR)
-        await self.tree.sync(guild=guild)
-        print("✅ Slash commands sincronizados")
-
 # ---------- EVENTOS ----------
 @bot.event
 async def on_ready():
-    print(f"🤖 Bot conectado como {bot.user}")  
+    print(f"🤖 Bot conectado como {bot.user}")
 
     # Envia painel inicial (apenas uma vez)
     canal = bot.get_channel(CANAL_ID)
@@ -560,7 +377,7 @@ async def on_ready():
 
     # sincroniza comandos de aplicação para o guild (apenas nesse servidor para testes)
     try:
-        print(f"Comandos sincronizados: {[cmd.name for cmd in synced]}")
+        print(f"Comandos sincronizados: {[cmd.name for cmd in os.sync]}")
     except Exception as e:
         print(f"Erro ao sincronizar comandos: {e}")
 
