@@ -20,6 +20,13 @@ import requests
 
 import requests
 
+class MyBot(commands.Bot):
+    async def setup_hook(self):
+        guild = discord.Object(id=ID_DO_SERVIDOR)
+        await self.tree.sync(guild=guild)
+        print("✅ Slash commands sincronizados")
+bot = MyBot(command_prefix="!", intents=discord.Intents.all())  
+
 async def enviar_api(tipo, dados):
     body = dados.copy()
     body["tipo"] = tipo
@@ -41,7 +48,6 @@ intents.guilds = True
 intents.message_content = True
 intents.members = True
 
-bot = MyBot(command_prefix="!", intents=intents)
 
 # IDs - ajuste conforme seu servidor
 ID_DO_SERVIDOR = 1343398652336537654  # Troque pelo ID real do seu servidor
